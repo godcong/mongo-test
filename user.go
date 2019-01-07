@@ -20,6 +20,7 @@ type User struct {
 	Password      string
 	Token         string
 	*Model
+	RoleUsers []*RoleUser `bson:"role_user"`
 }
 
 // CreateIfNotExist ...

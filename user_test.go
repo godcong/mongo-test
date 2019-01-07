@@ -2,6 +2,9 @@ package mongodb
 
 import (
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
+	"github.com/mongodb/mongo-go-driver/mongo"
+	"log"
+	"mongodb/util"
 	"testing"
 )
 
@@ -18,6 +21,9 @@ var user = User{
 
 // TestUser_Create ...
 func TestUser_Create(t *testing.T) {
+	user := NewUser()
+	user.Username = "godcong"
+	user.Name = util.GenerateRandomString(32)
 	t.Log(user.Create())
 	t.Log(user)
 }
@@ -62,13 +68,6 @@ func TestUser_Find(t *testing.T) {
 	t.Log(user, e)
 }
 
-// TestRole_Create ...
-func TestRole_Create(t *testing.T) {
-	g := NewGenesis()
-	e := g.Create()
-	t.Log(g, e)
-}
-
 // TestRoleUser_Find ...
 func TestRoleUser_Find(t *testing.T) {
 	ru := NewRoleUser()
@@ -80,16 +79,44 @@ func TestRoleUser_Find(t *testing.T) {
 
 }
 
-// TestRoleUser_Create ...
-func TestRoleUser_Create(t *testing.T) {
-	ru := NewRoleUser()
-	ru.RoleID = ID("5c2f2864451279e9ff6f2128")
-	ru.UserID = ID("5c2eeb95761de4f5a13b3b83")
-	e := ru.CreateIfNotExist()
-	t.Log(ru, e)
-}
-
 // TestFindGenesis ...
 func TestFindGenesis(t *testing.T) {
 	t.Log(FindGenesis())
+}
+
+// TestUser_Find2 ...
+func TestUser_Find2(t *testing.T) {
+	user := NewUser()
+	user.ID = ID("5c33711e06b5362b5f8dccbf")
+	cursor, err := C(user._Name()).Aggregate(mgo.TimeOut(),
+		mongo.Pipeline{
+			[]primitive.E{
+				{
+					Key: "$lookup",
+					Value: &RelateInfo{
+						From:         "role_user",
+						LocalField:   "_id",
+						ForeignField: "userid",
+						As:           "role_user",
+					},
+				},
+			},
+		})
+	//"$lookup": bson.M{
+	//	"from":         "role_user",
+	//	"localField":   "_id",
+	//	"foreignField": "userid",
+	//	"as":           "ru",
+	//},
+	t.Log(cursor, err)
+	//ru := NewRoleUser()
+	for cursor.Next(mgo.TimeOut()) {
+		//v := map[string]interface{}{}
+		err = cursor.Decode(user)
+		if len(user.RoleUsers) > 0 {
+			log.Printf("%+v", user.RoleUsers[0])
+		}
+		//log.Println(user.RoleUsers, err)
+	}
+
 }

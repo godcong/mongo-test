@@ -2,58 +2,116 @@ package mongodb
 
 import (
 	"context"
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/mongodb/mongo-go-driver/mongo/options"
+	"github.com/mongodb/mongo-go-driver/mongo/readpref"
+	"log"
 	"time"
 )
 
-// Client ...
-type Client struct {
-	ctx     context.Context
-	Timeout time.Duration
+// DefaultInterval ...
+const DefaultInterval = 5 * time.Second
+
+// MongoDB ...
+type MongoDB struct {
+	ctx  context.Context
+	host string
 	*mongo.Client
+	Interval time.Duration
+	database string
 }
 
-// NewClient ...
-func NewClient(ctx context.Context, uri string) (*Client, error) {
-	client, err := mongo.NewClient(uri)
-	if err != nil {
-		return nil, err
+var mgo *MongoDB
+
+func init() {
+	mgo = defaultDB()
+}
+
+func newMongoDB() *MongoDB {
+	//ctx, _ := context.WithCancel(context.Background())
+
+	return &MongoDB{
+		ctx:      context.Background(),
+		host:     "mongodb://root:v2RgzSuIaBlx@localhost:27017",
+		database: "database",
+		Interval: DefaultInterval,
 	}
-	if ctx == nil {
-		ctx = context.Background()
+}
+
+func defaultDB() *MongoDB {
+	db := newMongoDB()
+	client, err := InitClient(db.ctx, db.host)
+	if err != nil {
+		panic(err)
 	}
 
-	cli := Client{
-		Timeout: 5 * time.Second,
-		ctx:     ctx,
-		Client:  client,
+	db.Client = client
+	return db
+}
+
+// TimeOut ...
+func (m *MongoDB) TimeOut() context.Context {
+	ctx, _ := context.WithTimeout(m.ctx, m.Interval)
+	return ctx
+}
+
+// DB ...
+func DB() *MongoDB {
+	if mgo != nil {
+		return mgo
 	}
-	c, _ := context.WithTimeout(cli.ctx, cli.Timeout)
-	err = client.Connect(c)
+	return defaultDB()
+}
+
+// D ...
+func (m *MongoDB) D() *mongo.Database {
+	return m.Database(m.database)
+}
+
+// InitClient ...
+func InitClient(ctx context.Context, ip string) (*mongo.Client, error) {
+	client, err := mongo.NewClient(ip)
 	if err != nil {
 		return nil, err
 	}
-	return &cli, nil
+
+	err = client.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+// Ping ...
+func Ping() error {
+	return mgo.Ping(mgo.TimeOut(), readpref.Primary())
 }
 
 // Reconnect ...
-func (c *Client) Reconnect() error {
-	ctx, _ := context.WithTimeout(c.ctx, c.Timeout)
-	return c.Client.Connect(ctx)
-}
-
-// Database ...
-func (c *Client) Database(name string, opts ...*options.DatabaseOptions) *Database {
-	database := c.Client.Database(name, opts...)
-	return &Database{
-		ctx:      c.ctx,
-		Timeout:  c.Timeout,
-		Database: database,
+func Reconnect() error {
+	if err := Ping(); err != nil {
+		return mgo.Connect(mgo.TimeOut())
 	}
+	return nil
 }
 
-// Context ...
-func (c *Client) Context() context.Context {
-	return c.ctx
+// C return a collection
+func C(name string) *mongo.Collection {
+	return DB().D().Collection(name)
+}
+
+// RelateInfo ...
+type RelateInfo struct {
+	From         string `bson:"from"`
+	LocalField   string `bson:"localField"`
+	ForeignField string `bson:"foreignField"`
+	As           string `bson:"as"`
+}
+
+// Relate ...
+func Relate(name string, r *RelateInfo) {
+	cursor, err := C(name).Aggregate(mgo.TimeOut(), bson.M{
+		"$lookup": *r,
+	})
+	log.Println(cursor, err)
 }
