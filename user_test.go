@@ -97,7 +97,15 @@ func TestUser_Find2(t *testing.T) {
 						From:         "role_user",
 						LocalField:   "_id",
 						ForeignField: "userid",
-						As:           "role_user",
+						//Pipeline: mongo.Pipeline{
+						//	[]primitive.E{
+						//		{
+						//			Key:   "$match",
+						//			Value: bson.M{"_id": ID("5c3371da40f8748192f0f39e")},
+						//		},
+						//	},
+						//},
+						As: "role_user",
 					},
 				},
 			},
@@ -108,15 +116,14 @@ func TestUser_Find2(t *testing.T) {
 	//	"foreignField": "userid",
 	//	"as":           "ru",
 	//},
-	t.Log(cursor, err)
 	//ru := NewRoleUser()
 	for cursor.Next(mgo.TimeOut()) {
-		//v := map[string]interface{}{}
-		err = cursor.Decode(user)
+		v := map[string]interface{}{}
+		err = cursor.Decode(&v)
 		if len(user.RoleUsers) > 0 {
 			log.Printf("%+v", user.RoleUsers[0])
 		}
-		//log.Println(user.RoleUsers, err)
+		log.Println(v, err)
 	}
 
 }

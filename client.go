@@ -102,10 +102,11 @@ func C(name string) *mongo.Collection {
 
 // RelateInfo ...
 type RelateInfo struct {
-	From         string `bson:"from"`
-	LocalField   string `bson:"localField"`
-	ForeignField string `bson:"foreignField"`
-	As           string `bson:"as"`
+	From         string         `bson:"from"`
+	LocalField   string         `bson:"localField,omitempty"`
+	ForeignField string         `bson:"foreignField,omitempty"`
+	Pipeline     mongo.Pipeline `bson:"pipeline,omitempty"`
+	As           string         `bson:"as"`
 }
 
 // Relate ...
