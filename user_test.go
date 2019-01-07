@@ -84,13 +84,71 @@ func TestFindGenesis(t *testing.T) {
 	t.Log(FindGenesis())
 }
 
-// TestUser_Find2 ...
-func TestUser_Find2(t *testing.T) {
+// TestUser_Find3Table ...
+func TestUser_Find3Table(t *testing.T) {
+	// 3 表查询
+	//  select *
+	//	from user left join role_user on role_user.userid = user._id left join role on
+	//	role._id = role_user.roleid
+	//	where user._id = ObjectId('5c33711e06b5362b5f8dccbf')
+	//	db.user.aggregate(
+	//		[
+	//		{
+	//			"$project" : {
+	//				"_id" : NumberInt(0),
+	//				"user" : "$$ROOT"
+	//			}
+	//		},
+	//	{
+	//		"$lookup" : {
+	//		"localField" : "user._id",
+	//			"from" : "role_user",
+	//			"foreignField" : "userid",
+	//			"as" : "role_user"
+	//	}
+	//	},
+	//	{
+	//		"$unwind" : {
+	//		"path" : "$role_user",
+	//			"preserveNullAndEmptyArrays" : true
+	//	}
+	//	},
+	//	{
+	//		"$lookup" : {
+	//		"localField" : "role_user.roleid",
+	//			"from" : "role",
+	//			"foreignField" : "_id",
+	//			"as" : "role"
+	//	}
+	//	},
+	//	{
+	//		"$unwind" : {
+	//		"path" : "$role",
+	//			"preserveNullAndEmptyArrays" : true
+	//	}
+	//	},
+	//	{
+	//		"$match" : {
+	//		"user._id" : ObjectId("5c33711e06b5362b5f8dccbf")
+	//	}
+	//	}
+	//],
+	//	{
+	//	"allowDiskUse" : true
+	//	}
+	//	);
+
 	user := NewUser()
 	user.ID = ID("5c33711e06b5362b5f8dccbf")
+	//find, e := C(user._Name()).Find(mgo.TimeOut())
+	//find.
 	cursor, err := C(user._Name()).Aggregate(mgo.TimeOut(),
 		mongo.Pipeline{
 			[]primitive.E{
+				{
+					Key:   "_id",
+					Value: ID("5c3371da40f8748192f0f39e"),
+				},
 				{
 					Key: "$lookup",
 					Value: &RelateInfo{
@@ -117,6 +175,7 @@ func TestUser_Find2(t *testing.T) {
 	//	"as":           "ru",
 	//},
 	//ru := NewRoleUser()
+
 	for cursor.Next(mgo.TimeOut()) {
 		v := map[string]interface{}{}
 		err = cursor.Decode(&v)
