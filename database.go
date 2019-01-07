@@ -21,3 +21,4 @@ func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *
 		Collection: collection,
 	}
 }
+

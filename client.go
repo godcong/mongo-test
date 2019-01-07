@@ -48,3 +48,7 @@ func (c *Client) Database(name string, opts ...*options.DatabaseOptions) *Databa
 		Database: database,
 	}
 }
+
+func (c *Client) Context() context.Context {
+	return c.ctx
+}

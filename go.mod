@@ -1,6 +1,7 @@
 module mongodb
 
 require (
+	github.com/Gnouc/gocmt v0.0.0-20170330165702-da670d916238 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
