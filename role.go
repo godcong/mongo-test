@@ -43,7 +43,7 @@ type Role struct {
 	Slug        string
 	Description string
 	Level       int
-	*Model
+	*Model      `bson:",inline"`
 }
 
 // FindGenesis ...

@@ -5,7 +5,16 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	"github.com/mongodb/mongo-go-driver/mongo"
 	"log"
+	"time"
 )
+
+// UserD ...
+type UserD struct {
+	CreatedAt1 time.Time
+	UpdatedAt1 time.Time
+	DeletedAt1 *time.Time
+	Version1   int
+}
 
 // User ...
 type User struct {
@@ -19,8 +28,9 @@ type User struct {
 	Organization  string
 	Password      string
 	Token         string
-	*Model
-	RoleUsers []*RoleUser `bson:"role_user"`
+	//UserD         `bson:",inline"`
+	Model `bson:",inline"`
+	//RoleUsers     []*RoleUser `bson:"role_user"`
 }
 
 // CreateIfNotExist ...

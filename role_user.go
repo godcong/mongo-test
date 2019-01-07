@@ -13,7 +13,7 @@ type RoleUser struct {
 	RoleID primitive.ObjectID
 	user   *User
 	role   *Role
-	*Model
+	*Model `bson:",inline"`
 }
 
 // SetRole ...

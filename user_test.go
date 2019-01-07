@@ -35,7 +35,7 @@ func TestUser_Delete(t *testing.T) {
 		ID: id,
 	}
 	//t.Log(user.Delete())
-	user.SetSoftDelete(true)
+
 	e := user.Delete()
 	t.Log(e)
 	t.Log(user)
@@ -51,7 +51,7 @@ func TestUser_Update(t *testing.T) {
 	user := User{
 		ID: ID("5c2eea9a3db6598a9c25c65c"),
 	}
-	user.softDelete = true
+
 	user.Find()
 
 	user.Username = "SSSSSSSSSSSSSSSSSSSS"
@@ -146,14 +146,17 @@ func TestUser_Find3Table(t *testing.T) {
 		mongo.Pipeline{
 			[]primitive.E{
 				{
-					Key:   "_id",
-					Value: ID("5c3371da40f8748192f0f39e"),
+					Key: "$match",
+					Value: primitive.E{
+						Key:   "user._id",
+						Value: ID("5c33711e06b5362b5f8dccbf"),
+					},
 				},
 				{
 					Key: "$lookup",
 					Value: &RelateInfo{
 						From:         "role_user",
-						LocalField:   "_id",
+						LocalField:   "user._id",
 						ForeignField: "userid",
 						//Pipeline: mongo.Pipeline{
 						//	[]primitive.E{
@@ -179,10 +182,9 @@ func TestUser_Find3Table(t *testing.T) {
 	for cursor.Next(mgo.TimeOut()) {
 		v := map[string]interface{}{}
 		err = cursor.Decode(&v)
-		if len(user.RoleUsers) > 0 {
-			log.Printf("%+v", user.RoleUsers[0])
-		}
+		//if len(user.RoleUsers) > 0 {
+		//	log.Printf("%+v", user.RoleUsers[0])
+		//}
 		log.Println(v, err)
 	}
-
 }

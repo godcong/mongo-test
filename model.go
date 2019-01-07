@@ -48,7 +48,7 @@ type BaseAble interface {
 
 // Model ...
 type Model struct {
-	softDelete bool
+	SoftDelete bool `bson:"_,omitempty"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
@@ -58,7 +58,13 @@ type Model struct {
 // NewModel ...
 func NewModel() *Model {
 	return &Model{
-		softDelete: true,
+		SoftDelete: true,
+	}
+}
+
+func model() Model {
+	return Model{
+		SoftDelete: true,
 	}
 }
 
@@ -79,6 +85,7 @@ type After interface {
 // Modeler ...
 type Modeler interface {
 	_Name() string
+	_SoftDelete() bool
 	Before
 	After
 
@@ -90,7 +97,6 @@ type Modeler interface {
 	Update() error
 	Delete() error
 	Find() error
-	SoftDelete() bool
 }
 
 // ID ...
@@ -132,7 +138,7 @@ func InsertOne(m Modeler, ops ...*options.InsertOneOptions) error {
 
 // DeleteByID ...
 func DeleteByID(m Modeler, ops ...*options.DeleteOptions) error {
-	if m.SoftDelete() {
+	if m._SoftDelete() {
 		err := FindByID(m)
 		if err != nil {
 			return err
@@ -156,7 +162,7 @@ type FindDecode func(cursor mongo.Cursor) error
 
 // Find ...
 func Find(m Modeler, v bson.M, dec FindDecode, ops ...*options.FindOptions) error {
-	if m.SoftDelete() {
+	if m._SoftDelete() {
 		v["model.deletedat"] = nil
 	}
 	find, err := C(m._Name()).Find(mgo.TimeOut(), v, ops...)
@@ -174,7 +180,7 @@ func Find(m Modeler, v bson.M, dec FindDecode, ops ...*options.FindOptions) erro
 
 // FindOne ...
 func FindOne(m Modeler, v bson.M, ops ...*options.FindOneOptions) error {
-	if m.SoftDelete() {
+	if m._SoftDelete() {
 		v["model.deletedat"] = nil
 	}
 	return C(m._Name()).FindOne(mgo.TimeOut(), v, ops...).Decode(m)
@@ -185,7 +191,7 @@ func FindByID(m Modeler, ops ...*options.FindOneOptions) error {
 	v := bson.M{
 		"_id": m.GetID(),
 	}
-	if m.SoftDelete() {
+	if m._SoftDelete() {
 		v["model.deletedat"] = nil
 	}
 	return C(m._Name()).FindOne(mgo.TimeOut(), v, ops...).Decode(m)
@@ -193,7 +199,7 @@ func FindByID(m Modeler, ops ...*options.FindOneOptions) error {
 
 // Count ...
 func Count(m Modeler, v bson.M) (int64, error) {
-	if m.SoftDelete() {
+	if m._SoftDelete() {
 		v["model.deletedat"] = nil
 	}
 	//result := C(m._Name()).FindOne(mgo.TimeOut(), v)
@@ -222,16 +228,6 @@ func CreateIfNotExist(m Modeler) error {
 // IsExist ...
 func (m *Model) IsExist() bool {
 	return false
-}
-
-// SoftDelete ...
-func (m *Model) SoftDelete() bool {
-	return m.softDelete
-}
-
-// SetSoftDelete ...
-func (m *Model) SetSoftDelete(b bool) {
-	m.softDelete = b
 }
 
 // BeforeInsert ...
@@ -267,6 +263,10 @@ func (m *Model) AfterUpdate() {
 // AfterDelete ...
 func (m *Model) AfterDelete() {
 	return
+}
+
+func (m *Model) _SoftDelete() bool {
+	return m.SoftDelete
 }
 
 // TransactionDo ...
