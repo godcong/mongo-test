@@ -7,12 +7,14 @@ import (
 	"time"
 )
 
+// Client ...
 type Client struct {
 	ctx     context.Context
 	Timeout time.Duration
 	*mongo.Client
 }
 
+// NewClient ...
 func NewClient(ctx context.Context, uri string) (*Client, error) {
 	client, err := mongo.NewClient(uri)
 	if err != nil {
@@ -35,11 +37,13 @@ func NewClient(ctx context.Context, uri string) (*Client, error) {
 	return &cli, nil
 }
 
+// Reconnect ...
 func (c *Client) Reconnect() error {
 	ctx, _ := context.WithTimeout(c.ctx, c.Timeout)
 	return c.Client.Connect(ctx)
 }
 
+// Database ...
 func (c *Client) Database(name string, opts ...*options.DatabaseOptions) *Database {
 	database := c.Client.Database(name, opts...)
 	return &Database{
@@ -49,6 +53,7 @@ func (c *Client) Database(name string, opts ...*options.DatabaseOptions) *Databa
 	}
 }
 
+// Context ...
 func (c *Client) Context() context.Context {
 	return c.ctx
 }
